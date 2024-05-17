@@ -13,7 +13,7 @@ export const Introduction = ({
   onChangeAiKey,
   onChangeKoeiromapKey,
 }: Props) => {
-  const [opened, setOpened] = useState(true);
+  const [opened, setOpened] = useState(false);
 
   const handleAiKeyChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {

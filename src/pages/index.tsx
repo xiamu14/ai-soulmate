@@ -1,11 +1,7 @@
 import { useCallback, useContext, useEffect, useState } from "react";
 import VrmViewer from "@/components/vrmViewer";
 import { ViewerContext } from "@/features/vrmViewer/viewerContext";
-import {
-  Message,
-  textsToScreenplay,
-  Screenplay,
-} from "@/features/messages/messages";
+import { Message, textsToScreenplay, Screenplay } from "@/features/messages/messages";
 import { speakCharacter } from "@/features/messages/speakCharacter";
 import { MessageInputContainer } from "@/components/messageInputContainer";
 import { SYSTEM_PROMPT } from "@/features/constants/systemPromptConstants";
@@ -20,8 +16,8 @@ export default function Home() {
   const { viewer } = useContext(ViewerContext);
 
   const [systemPrompt, setSystemPrompt] = useState(SYSTEM_PROMPT);
-  const [openAiKey, setOpenAiKey] = useState("");
-  const [koeiromapKey, setKoeiromapKey] = useState("");
+  const [openAiKey, setOpenAiKey] = useState("sk-EwPrIvJZyx0UYGurF7D8D897906e46A58aB17fB2BdEb1aC3"); // 中转令牌
+  const [koeiromapKey, setKoeiromapKey] = useState("421a8fdefbf7474ab590bb45ef704d94");
   const [koeiroParam, setKoeiroParam] = useState<KoeiroParam>(DEFAULT_PARAM);
   const [chatProcessing, setChatProcessing] = useState(false);
   const [chatLog, setChatLog] = useState<Message[]>([]);
@@ -29,9 +25,7 @@ export default function Home() {
 
   useEffect(() => {
     if (window.localStorage.getItem("chatVRMParams")) {
-      const params = JSON.parse(
-        window.localStorage.getItem("chatVRMParams") as string
-      );
+      const params = JSON.parse(window.localStorage.getItem("chatVRMParams") as string);
       setSystemPrompt(params.systemPrompt ?? SYSTEM_PROMPT);
       setKoeiroParam(params.koeiroParam ?? DEFAULT_PARAM);
       setChatLog(params.chatLog ?? []);
@@ -42,8 +36,8 @@ export default function Home() {
     process.nextTick(() =>
       window.localStorage.setItem(
         "chatVRMParams",
-        JSON.stringify({ systemPrompt, koeiroParam, chatLog })
-      )
+        JSON.stringify({ systemPrompt, koeiroParam, chatLog }),
+      ),
     );
   }, [systemPrompt, koeiroParam, chatLog]);
 
@@ -55,21 +49,17 @@ export default function Home() {
 
       setChatLog(newChatLog);
     },
-    [chatLog]
+    [chatLog],
   );
 
   /**
    * 文ごとに音声を直列でリクエストしながら再生する
    */
   const handleSpeakAi = useCallback(
-    async (
-      screenplay: Screenplay,
-      onStart?: () => void,
-      onEnd?: () => void
-    ) => {
+    async (screenplay: Screenplay, onStart?: () => void, onEnd?: () => void) => {
       speakCharacter(screenplay, viewer, koeiromapKey, onStart, onEnd);
     },
-    [viewer, koeiromapKey]
+    [viewer, koeiromapKey],
   );
 
   /**
@@ -88,10 +78,7 @@ export default function Home() {
 
       setChatProcessing(true);
       // ユーザーの発言を追加して表示
-      const messageLog: Message[] = [
-        ...chatLog,
-        { role: "user", content: newMessage },
-      ];
+      const messageLog: Message[] = [...chatLog, { role: "user", content: newMessage }];
       setChatLog(messageLog);
 
       // Chat GPTへ
@@ -103,12 +90,10 @@ export default function Home() {
         ...messageLog,
       ];
 
-      const stream = await getChatResponseStream(messages, openAiKey).catch(
-        (e) => {
-          console.error(e);
-          return null;
-        }
-      );
+      const stream = await getChatResponseStream(messages, openAiKey).catch((e) => {
+        console.error(e);
+        return null;
+      });
       if (stream == null) {
         setChatProcessing(false);
         return;
@@ -134,21 +119,17 @@ export default function Home() {
           }
 
           // 返答を一文単位で切り出して処理する
-          const sentenceMatch = receivedMessage.match(
-            /^(.+[。．！？\n]|.{10,}[、,])/
-          );
+          const sentenceMatch = receivedMessage.match(/^(.+[。．！？\n]|.{10,}[、,])/);
           if (sentenceMatch && sentenceMatch[0]) {
             const sentence = sentenceMatch[0];
             sentences.push(sentence);
-            receivedMessage = receivedMessage
-              .slice(sentence.length)
-              .trimStart();
+            receivedMessage = receivedMessage.slice(sentence.length).trimStart();
 
             // 発話不要/不可能な文字列だった場合はスキップ
             if (
               !sentence.replace(
                 /^[\s\[\(\{「［（【『〈《〔｛«‹〘〚〛〙›»〕》〉』】）］」\}\)\]]+$/g,
-                ""
+                "",
               )
             ) {
               continue;
@@ -181,7 +162,7 @@ export default function Home() {
       setChatLog(messageLogAssistant);
       setChatProcessing(false);
     },
-    [systemPrompt, chatLog, handleSpeakAi, openAiKey, koeiroParam]
+    [systemPrompt, chatLog, handleSpeakAi, openAiKey, koeiroParam],
   );
 
   return (

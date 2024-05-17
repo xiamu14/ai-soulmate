@@ -26,10 +26,7 @@ export async function getChatResponse(messages: Message[], apiKey: string) {
   return { message: message };
 }
 
-export async function getChatResponseStream(
-  messages: Message[],
-  apiKey: string
-) {
+export async function getChatResponseStream(messages: Message[], apiKey: string) {
   if (!apiKey) {
     throw new Error("Invalid API Key");
   }
@@ -38,7 +35,9 @@ export async function getChatResponseStream(
     "Content-Type": "application/json",
     Authorization: `Bearer ${apiKey}`,
   };
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  const redirectApiUrl = "https://one.aiskt.com/v1/chat/completions"; // 中转
+  const apiUrl = "https://api.openai.com/v1/chat/completions"; // 直连
+  const res = await fetch(redirectApiUrl, {
     headers: headers,
     method: "POST",
     body: JSON.stringify({
@@ -62,9 +61,7 @@ export async function getChatResponseStream(
           const { done, value } = await reader.read();
           if (done) break;
           const data = decoder.decode(value);
-          const chunks = data
-            .split("data:")
-            .filter((val) => !!val && val.trim() !== "[DONE]");
+          const chunks = data.split("data:").filter((val) => !!val && val.trim() !== "[DONE]");
           for (const chunk of chunks) {
             const json = JSON.parse(chunk);
             const messagePiece = json.choices[0].delta.content;
